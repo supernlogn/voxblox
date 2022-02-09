@@ -171,11 +171,16 @@ class Block {
 
   const std::bitset<Update::kCount>& updated() const { return updated_; }
   std::bitset<Update::kCount>& updated() { return updated_; }
+  bool updated(Update::Status status) const { return updated_[status]; }
   bool& has_data() { return has_data_; }
 
   void set_updated(const std::bitset<Update::kCount>& updated) {
     updated_ = updated;
   }
+  void setUpdated(Update::Status status, bool value) {
+    updated_[status] = value;
+  }
+  void setUpdatedAll() { updated_.set(); }
   void set_has_data(bool has_data) { has_data_ = has_data; }
 
   // Serialization.
