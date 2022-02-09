@@ -11,7 +11,10 @@
 namespace voxblox_rviz_plugin {
 
 VoxbloxMultiMeshDisplay::VoxbloxMultiMeshDisplay()
-    : dt_since_last_update_(0.f) {
+    : toggle_visibility_all_property_("Toggle Visibility All", true,
+                                      "Set the visibility for all meshes.",
+                                      this, SLOT(toggleVisibilityAllSLOT())),
+      dt_since_last_update_(0.f) {
   voxblox_rviz_plugin::MaterialLoader::loadMaterials();
   // Initialize the top level of the visibility hierarchy.
   visibility_fields_.reset(new VisibilityField("Visible", this, this));
@@ -36,6 +39,16 @@ void VoxbloxMultiMeshDisplay::updateVisible() {
       updateTransformation(&(ns_visual_pair.second), ros::Time::now());
     }
   }
+}
+
+
+void VoxbloxMultiMeshDisplay::toggleVisibilityAllSLOT() {
+  // Toggle all visibility fields except for the root.
+  const bool root_visible = visibility_fields_->getBool();
+  visibility_fields_->setEnabledForAll(
+      toggle_visibility_all_property_.getBool());
+  visibility_fields_->setBool(root_visible);
+  updateVisible();
 }
 
 void VoxbloxMultiMeshDisplay::processMessage(
@@ -230,6 +243,14 @@ bool VisibilityField::isEnabled(const std::string& field_name) {
       return false;
     }
     return it->second->getBool();
+  }
+}
+
+void VisibilityField::setEnabledForAll(bool enabled) {
+  // Recursively set all properties.
+  setBool(enabled);
+  for (auto& child : children_) {
+    child.second->setEnabledForAll(enabled);
   }
 }
 
